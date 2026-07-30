@@ -1,0 +1,317 @@
+<title>Website Extractor — Deploy Guide</title>
+<link rel="stylesheet" href="styles.css">
+
+<div class="page">
+
+  <header>
+    <div class="header-left">
+      <p class="eyebrow">Deploy Guide</p>
+      <h1>Website Extractor</h1>
+      <p class="header-desc">Guia completo para hospedar o Website Extractor na Hostinger VPS com Docker, domínio customizado e SSL.</p>
+    </div>
+    <div class="badges">
+      <span class="badge"><span class="badge-dot"></span>Hostinger VPS</span>
+      <span class="badge">Docker</span>
+      <span class="badge">Python 3.11</span>
+    </div>
+  </header>
+
+  <!-- Prerequisites -->
+  <div class="prereqs">
+    <p class="prereqs-title">Antes de começar</p>
+    <ul class="prereq-list">
+      <li class="prereq-item">
+        <span class="prereq-check">✓</span>
+        <div><strong>Conta GitHub</strong> <span>— com acesso ao repositório <code>website-extractor</code></span></div>
+      </li>
+      <li class="prereq-item">
+        <span class="prereq-check">✓</span>
+        <div><strong>Hostinger VPS ativo</strong> <span>— plano KVM 1 ou superior (4 GB RAM mínimo). Anote o IP do servidor.</span></div>
+      </li>
+      <li class="prereq-item">
+        <span class="prereq-check">✓</span>
+        <div><strong>Domínio configurado</strong> <span>— domínio ou subdomínio que você quer apontar para o app</span></div>
+      </li>
+      <li class="prereq-item">
+        <span class="prereq-check">✓</span>
+        <div><strong>Terminal SSH</strong> <span>— acesso via terminal (Windows Terminal, iTerm2, Putty, ou o terminal integrado da Hostinger)</span></div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Steps -->
+  <div class="steps">
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <div>
+          <p class="step-title">Subir o código no GitHub</p>
+          <p class="step-desc">Publique o repositório customizado no seu perfil do GitHub para o servidor conseguir baixar.</p>
+        </div>
+      </div>
+      <div class="step-body">
+        <p>No computador, abra o terminal dentro da pasta <code>D:\website-extractor</code> e execute:</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">PowerShell / Terminal</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>cd D:\website-extractor
+git remote remove origin
+git remote add origin https://github.com/<span class="ph">SEU-USUARIO</span>/website-extractor.git
+git add .
+git commit -m "feat: customizacao branding Website Extractor"
+git push -u origin main</code></pre>
+        </div>
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ</span>
+          <span>Substitua <strong><span class="ph">SEU-USUARIO</span></strong> pelo seu usuário do GitHub. O repositório deve ser <strong>público</strong> para o servidor conseguir clonar sem autenticação.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div>
+          <p class="step-title">Acessar o VPS via SSH</p>
+          <p class="step-desc">Conecte ao servidor da Hostinger pelo terminal.</p>
+        </div>
+      </div>
+      <div class="step-body">
+        <p>No painel da Hostinger, vá em <strong>VPS → Manage</strong> e copie o IP do servidor. Depois conecte via SSH:</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">Terminal</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>ssh root@<span class="ph">IP_DO_VPS</span></code></pre>
+        </div>
+        <p>A Hostinger também oferece um terminal diretamente no painel web em <strong>VPS → Terminal</strong>, caso prefira não usar SSH local.</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div>
+          <p class="step-title">Instalar Docker no servidor</p>
+          <p class="step-desc">O app roda em container Docker — instale uma única vez e nunca mais precisa mexer.</p>
+        </div>
+      </div>
+      <div class="step-body">
+        <p>Execute o script oficial de instalação do Docker:</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">Servidor (SSH)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>curl -fsSL https://get.docker.com | sh
+systemctl enable docker
+systemctl start docker</code></pre>
+        </div>
+        <p>Verifique se funcionou:</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">Servidor (SSH)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>docker --version</code></pre>
+        </div>
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ</span>
+          <span>Se o servidor já tiver Docker instalado, pule esta etapa.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">4</div>
+        <div>
+          <p class="step-title">Clonar o repositório e rodar o app</p>
+          <p class="step-desc">Baixe o código e suba o container — o app estará acessível na porta 8080.</p>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">Servidor (SSH)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>git clone https://github.com/<span class="ph">SEU-USUARIO</span>/website-extractor.git /app/website-extractor
+cd /app/website-extractor
+docker build -t website-extractor .
+docker run -d \
+  --name website-extractor \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  website-extractor</code></pre>
+        </div>
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠</span>
+          <span><strong>O build leva de 3 a 8 minutos</strong> na primeira vez — o Docker precisa baixar o Python, instalar dependências e o Chromium. É normal a espera.</span>
+        </div>
+        <p>Para confirmar que está rodando:</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">Servidor (SSH)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>docker ps</code></pre>
+        </div>
+        <p>Você deve ver <code>website-extractor</code> com status <code>Up</code>.</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">5</div>
+        <div>
+          <p class="step-title">Apontar o domínio para o VPS</p>
+          <p class="step-desc">Configure o DNS para que seu domínio resolva para o IP do servidor.</p>
+        </div>
+      </div>
+      <div class="step-body">
+        <p>No painel do seu provedor de domínio (Hostinger, Cloudflare, etc.), crie o seguinte registro DNS:</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Nome / Host</th>
+                <th>Valor</th>
+                <th>TTL</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>A</strong></td>
+                <td><code>@</code> (domínio raiz) ou <code>extractor</code> (subdomínio)</td>
+                <td><code><span class="ph">IP_DO_VPS</span></code></td>
+                <td>3600</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ</span>
+          <span>A propagação do DNS pode levar <strong>até 24h</strong>, mas normalmente resolve em menos de 1 hora. Você pode verificar em <strong>dnschecker.org</strong>.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">6</div>
+        <div>
+          <p class="step-title">Configurar Nginx e SSL gratuito</p>
+          <p class="step-desc">Instale o Nginx como proxy reverso e emita o certificado SSL com Certbot.</p>
+        </div>
+      </div>
+      <div class="step-body">
+        <p>Instale Nginx e Certbot:</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">Servidor (SSH)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>apt update && apt install -y nginx certbot python3-certbot-nginx</code></pre>
+        </div>
+        <p>Crie o arquivo de configuração do Nginx (substitua <code><span class="ph">SEU-DOMINIO.com</span></code>):</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">Servidor (SSH)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>cat > /etc/nginx/sites-available/website-extractor << 'EOF'
+server {
+    listen 80;
+    server_name <span class="ph">SEU-DOMINIO.com</span>;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 300s;
+    }
+}
+EOF
+
+ln -s /etc/nginx/sites-available/website-extractor /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx</code></pre>
+        </div>
+        <p>Emita o certificado SSL gratuito:</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">Servidor (SSH)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>certbot --nginx -d <span class="ph">SEU-DOMINIO.com</span></code></pre>
+        </div>
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ</span>
+          <span>O Certbot pedirá um e-mail para notificações de renovação. O certificado é renovado automaticamente a cada 90 dias.</span>
+        </div>
+        <p>Após o Certbot finalizar, o app estará acessível em <code>https://<span class="ph">SEU-DOMINIO.com</span></code>.</p>
+      </div>
+    </div>
+
+    <!-- Step 7 — Updates -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-num">7</div>
+        <div>
+          <p class="step-title">Como atualizar o app no futuro</p>
+          <p class="step-desc">Sempre que fizer mudanças no código, repita este processo.</p>
+        </div>
+      </div>
+      <div class="step-body">
+        <p>No computador local, publique as alterações no GitHub:</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">PowerShell / Terminal (local)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>git add .
+git commit -m "update: descricao da mudanca"
+git push</code></pre>
+        </div>
+        <p>No servidor, atualize e reconstrua o container:</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="code-label">Servidor (SSH)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>cd /app/website-extractor
+git pull
+docker build -t website-extractor .
+docker stop website-extractor
+docker rm website-extractor
+docker run -d \
+  --name website-extractor \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  website-extractor</code></pre>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /steps -->
+
+  <footer>
+    Website Extractor — Deploy Guide &nbsp;·&nbsp; Hostinger VPS + Docker + Nginx + Let's Encrypt
+  </footer>
+
+</div>
+
+<script src="script.js"></script>

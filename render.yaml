@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: website-downloader
+    name: website-extractor
     env: docker
     dockerfilePath: ./Dockerfile
     envVars:
