@@ -1,305 +1,423 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Extractor</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 520px;
-        }
-        h1 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #1a1a2e;
-        }
-        .subtitle {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-        }
-        .input-group {
-            margin-bottom: 1rem;
-        }
-        input[type="url"] {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        input[type="url"]:focus {
-            border-color: #4a6cf7;
-            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
-        }
-        input[type="url"]:disabled {
-            background: #f5f5f5;
-            color: #999;
-        }
-        button {
-            background: linear-gradient(135deg, #4a6cf7 0%, #6366f1 100%);
-            color: white;
-            border: none;
-            padding: 14px 24px;
-            font-size: 1rem;
-            border-radius: 10px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(74, 108, 247, 0.4);
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .log-container {
-            margin-top: 1.5rem;
-            background: #1a1a2e;
-            border-radius: 10px;
-            padding: 1rem;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-        }
-        .log-container.active {
-            display: block;
-        }
-        .log-entry {
-            color: #a0a0a0;
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-            font-size: 0.8rem;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            animation: fadeIn 0.3s ease;
-        }
-        .log-entry:last-child {
-            border-bottom: none;
-            color: #4ade80;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .success-message {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 1rem;
-            border-radius: 10px;
-            margin-top: 1rem;
-            text-align: center;
-            display: none;
-            animation: slideUp 0.3s ease;
-        }
-        .success-message.active {
-            display: block;
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .success-message a {
-            color: white;
-            font-weight: 600;
-            text-decoration: underline;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akaia Extractor — Captura offline de qualquer site</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #030303;
+    --panel: #080808;
+    --panel-2: #0d0d0d;
+    --mint: #1e8fff;         /* azul elétrico no lugar do verde original */
+    --mint-soft: rgba(30, 143, 255, 0.12);
+    --mint-dark: #0b63c2;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.15);
+    --sub: #888888;
+    --white: #ffffff;
+    --error: #ff5577;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--void); color: #e0e0e0; height: 100%; }
+  body {
+    font-family: Inter, sans-serif;
+    overflow: hidden;
+    background-color: var(--void);
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    min-height: 100dvh;
+  }
+  ::selection { background: var(--mint); color: var(--void); }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1f1f1f; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--mint); }
+
+  .bg-glow {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(60% 55%, rgba(30,143,255,0.18), transparent 70%);
+  }
+  .bg-vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(100% 100%, transparent 40%, rgba(3,3,3,0.55) 100%);
+  }
+  .hud-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 30; padding: 18px; }
+  .hud-overlay > div { position: absolute; width: 12px; height: 12px; opacity: 0.55; }
+  .hud-tl { top: 18px; left: 18px; border-top: 1px solid var(--white); border-left: 1px solid var(--white); }
+  .hud-tr { top: 18px; right: 18px; border-top: 1px solid var(--white); border-right: 1px solid var(--white); }
+  .hud-bl { bottom: 18px; left: 18px; border-bottom: 1px solid var(--white); border-left: 1px solid var(--white); }
+  .hud-br { bottom: 18px; right: 18px; border-bottom: 1px solid var(--white); border-right: 1px solid var(--white); }
+  .hud-status {
+    position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+    font-family: "JetBrains Mono", monospace; font-size: 9px; color: var(--sub);
+    text-transform: uppercase; letter-spacing: 0.24em;
+    display: flex; align-items: center; gap: 8px; opacity: 0.7;
+  }
+  .hud-status .dot {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--mint);
+    box-shadow: 0 0 8px var(--mint); animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @media (max-width: 640px) { .hud-status { display: none; } }
+
+  .stage {
+    position: relative; z-index: 10; min-height: 100dvh;
+    display: flex; align-items: center; justify-content: center; padding: 32px 20px;
+  }
+
+  .card {
+    position: relative; width: 100%; max-width: 540px;
+    background: linear-gradient(rgba(10,10,10,0.92), rgba(3,3,3,0.96));
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow:
+      rgba(30,143,255,0.06) 0px 0px 0px 1px,
+      rgba(0,0,0,0.65) 0px 28px 90px 0px,
+      rgba(30,143,255,0.12) 0px 0px 60px 0px,
+      rgba(255,255,255,0.04) 0px 1px 0px 0px inset;
+    opacity: 0; transform: translateY(18px);
+    animation: cardIn 0.9s cubic-bezier(.16,1,.3,1) 0.15s 1 forwards;
+  }
+  @keyframes cardIn { 100% { opacity: 1; transform: translateY(0); } }
+  .card:hover {
+    box-shadow:
+      rgba(30,143,255,0.1) 0px 0px 0px 1px,
+      rgba(0,0,0,0.7) 0px 28px 90px,
+      rgba(30,143,255,0.2) 0px 0px 80px,
+      rgba(255,255,255,0.05) 0px 1px 0px inset;
+  }
+  .card .br { position: absolute; width: 12px; height: 12px; pointer-events: none; transition: width .3s, height .3s; }
+  .card .br-tl { top: -1px; left: -1px; border-top: 1.5px solid var(--mint); border-left: 1.5px solid var(--mint); }
+  .card .br-tr { top: -1px; right: -1px; border-top: 1.5px solid var(--mint); border-right: 1.5px solid var(--mint); }
+  .card .br-bl { bottom: -1px; left: -1px; border-bottom: 1.5px solid var(--mint); border-left: 1.5px solid var(--mint); }
+  .card .br-br { bottom: -1px; right: -1px; border-bottom: 1.5px solid var(--mint); border-right: 1.5px solid var(--mint); }
+  .card:hover .br { width: 16px; height: 16px; }
+
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 16px; border-bottom: 1px solid var(--border);
+    font-family: "JetBrains Mono", monospace; font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: 0.18em; color: var(--sub);
+  }
+  .card-head .left { display: flex; align-items: center; gap: 12px; }
+  .card-head .dots { display: flex; gap: 5px; }
+  .card-head .dots span { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.12); }
+  .card-head .dots span.live { background: var(--mint); box-shadow: 0 0 6px var(--mint); }
+  .card-head .right { color: var(--mint); display: flex; align-items: center; gap: 6px; }
+  .card-head .right .pulse {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--mint);
+    box-shadow: 0 0 6px var(--mint); animation: pulse 2s ease-in-out infinite;
+  }
+
+  .card-body { padding: 36px 32px 32px; }
+  @media (max-width: 480px) { .card-body { padding: 28px 22px 24px; } }
+
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .brand .mark {
+    width: 28px; height: 28px; background: var(--mint); color: var(--void);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 13px;
+    box-shadow: rgba(30,143,255,0.5) 0px 0px 14px; flex-shrink: 0;
+  }
+  .brand .name { font-family: Inter, sans-serif; font-weight: 600; font-size: 17px; letter-spacing: -0.02em; color: var(--white); }
+  .brand .name .accent { color: var(--mint); }
+
+  .desc { color: #a8a8a8; font-size: 14.5px; line-height: 1.6; margin-bottom: 26px; max-width: 440px; }
+  .desc b { color: var(--white); font-weight: 500; }
+
+  .form-label {
+    display: flex; align-items: center; gap: 8px;
+    font-family: "JetBrains Mono", monospace; font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: 0.2em; color: var(--sub); margin-bottom: 10px;
+  }
+  .form-label .accent { color: var(--mint); }
+  .form-row { display: flex; flex-direction: column; gap: 10px; }
+  .input-wrap {
+    position: relative; border: 1px solid var(--border-strong);
+    background: var(--void); transition: border-color .2s, box-shadow .25s;
+  }
+  .input-wrap:focus-within {
+    border-color: var(--mint);
+    box-shadow: 0 0 0 1px var(--mint), 0 0 22px rgba(30,143,255,0.22);
+  }
+  .input-wrap::before {
+    content: ">"; position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--mint); font-family: "JetBrains Mono", monospace; font-size: 14px; font-weight: 600;
+    pointer-events: none;
+  }
+  .input-wrap input {
+    width: 100%; padding: 15px 16px 15px 36px; background: transparent; border: 0; color: var(--white);
+    font-family: "JetBrains Mono", monospace; font-size: 13px; letter-spacing: 0.01em; outline: none;
+  }
+  .input-wrap input::placeholder { color: #444; }
+  .input-wrap input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .grab-btn {
+    position: relative; width: 100%; background: var(--mint); color: var(--void);
+    padding: 14px 24px; border: 0; font-family: Inter, sans-serif; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: background .2s, transform .1s, box-shadow .3s;
+    box-shadow: rgba(30,143,255,0.4) 0px 0px 22px; overflow: hidden;
+  }
+  .grab-btn::before {
+    content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transition: left .6s;
+  }
+  .grab-btn:hover:not(:disabled)::before { left: 100%; }
+  .grab-btn:hover:not(:disabled) { background: var(--white); box-shadow: rgba(255,255,255,0.45) 0px 0px 30px; }
+  .grab-btn:active:not(:disabled) { transform: translateY(1px); }
+  .grab-btn:disabled { background: rgba(30,143,255,0.18); color: rgba(30,143,255,0.7); cursor: not-allowed; box-shadow: none; }
+  .grab-btn .arrow { transition: transform .2s; font-family: "JetBrains Mono", monospace; font-weight: 600; }
+  .grab-btn:hover:not(:disabled) .arrow { transform: translateX(4px); }
+
+  .spinner {
+    width: 14px; height: 14px; border: 1.5px solid rgba(30,143,255,0.3);
+    border-top-color: var(--mint); border-radius: 50%;
+    animation: spin .7s linear infinite; display: none;
+  }
+  .grab-btn.loading .spinner { display: block; }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+
+  .form-meta {
+    display: flex; align-items: center; justify-content: space-between; margin-top: 14px;
+    font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: #555;
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+
+  .log-shell {
+    margin-top: 18px; border: 1px solid var(--border); background: var(--panel);
+    display: none; overflow: hidden;
+  }
+  .log-shell.open { display: block; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .log-head {
+    display: flex; align-items: center; justify-content: space-between; padding: 9px 14px;
+    border-bottom: 1px solid var(--border); font-family: "JetBrains Mono", monospace;
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--sub);
+  }
+  .log-head .left { display: flex; align-items: center; gap: 10px; }
+  .log-head .scan {
+    width: 26px; height: 3px; background: linear-gradient(90deg, transparent, var(--mint), transparent);
+    box-shadow: 0 0 6px var(--mint); animation: scanPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes scanPulse { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+  .log-head .right { color: var(--mint); display: flex; align-items: center; gap: 6px; }
+  .log-head .right .dot {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--mint);
+    box-shadow: 0 0 6px var(--mint); animation: pulse 1.4s ease-in-out infinite;
+  }
+  .log-body {
+    padding: 12px 14px; max-height: 220px; overflow-y: auto;
+    font-family: "JetBrains Mono", monospace; font-size: 11.5px; line-height: 1.7;
+  }
+  .cursor-line { color: rgba(255,255,255,0.85); flex-shrink: 0; font-size: 10px; }
+  .log-line { color: #a8a8a8; }
+  .log-line.err { color: var(--error); }
+
+  .success-shell {
+    margin-top: 14px; border: 1px solid rgba(30,143,255,0.4);
+    background: linear-gradient(135deg, rgba(30,143,255,0.1), rgba(30,143,255,0.02));
+    padding: 14px 16px; display: none; align-items: center; gap: 14px; position: relative; overflow: hidden;
+  }
+  .success-shell.open { display: flex; animation: successIn .5s cubic-bezier(.16,1,.3,1); }
+  @keyframes successIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .success-shell::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--mint); box-shadow: 0 0 14px var(--mint);
+  }
+  .success-icon {
+    width: 36px; height: 36px; border: 1px solid var(--mint); background: rgba(30,143,255,0.1);
+    display: flex; align-items: center; justify-content: center; color: var(--mint);
+    flex-shrink: 0; box-shadow: rgba(30,143,255,0.35) 0px 0px 14px; font-size: 18px;
+  }
+  .success-text { flex: 1; min-width: 0; }
+  .success-text .title {
+    color: var(--mint); font-family: "JetBrains Mono", monospace; font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.16em; margin-bottom: 3px;
+  }
+  .success-text .meta { color: #c0c0c0; font-size: 12px; font-family: "JetBrains Mono", monospace; }
+  .success-link {
+    background: var(--mint); color: var(--void); padding: 9px 16px; text-decoration: none;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    display: inline-flex; align-items: center; gap: 7px; transition: background .2s, box-shadow .2s;
+    box-shadow: rgba(30,143,255,0.4) 0px 0px 16px; flex-shrink: 0; white-space: nowrap;
+  }
+  .success-link:hover { background: var(--white); }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔍 Website Extractor</h1>
-        <p class="subtitle">Extraia uma réplica completa de qualquer site, incluindo JS renderizado</p>
-        
-        <div class="input-group">
-            <input type="url" id="urlInput" placeholder="https://exemplo.com" required>
-        </div>
-        
-        <button id="downloadBtn" onclick="startDownload()">
-            <span id="btnText">Baixar Réplica</span>
-            <div class="spinner" id="spinner" style="display: none;"></div>
-        </button>
-        
-        <div class="log-container" id="logContainer"></div>
-        
-        <div class="success-message" id="successMessage">
-            ✅ Download pronto! <a href="#" id="downloadLink">Clique aqui se não iniciou automaticamente</a>
-        </div>
+
+<div class="bg-glow"></div>
+<div class="bg-vignette"></div>
+<div class="hud-overlay">
+  <div class="hud-tl"></div>
+  <div class="hud-tr"></div>
+  <div class="hud-bl"></div>
+  <div class="hud-br"></div>
+</div>
+<div class="hud-status"><span class="dot"></span><span>akaia — pipeline ativo</span></div>
+
+<div class="stage">
+  <section class="card" aria-label="Akaia Extractor">
+    <span class="br br-tl"></span>
+    <span class="br br-tr"></span>
+    <span class="br br-bl"></span>
+    <span class="br br-br"></span>
+
+    <div class="card-head">
+      <div class="left">
+        <div class="dots"><span class="live"></span><span></span><span></span></div>
+        <span>akaia://extract</span>
+      </div>
+      <div class="right"><span class="pulse"></span><span id="head-status">pronto</span></div>
     </div>
 
-    <script>
-        let currentSessionId = null;
-        let eventSource = null;
+    <div class="card-body">
+      <div class="brand">
+        <span class="mark">A</span>
+        <span class="name">Akaia Extractor <span class="accent">2.0</span></span>
+      </div>
 
-        function startDownload() {
-            const url = document.getElementById('urlInput').value.trim();
-            if (!url) {
-                alert('Por favor, insira uma URL válida');
-                return;
-            }
+      <p class="desc">
+        Capture qualquer site em um <b>ZIP offline</b> completo. HTML, CSS, JS, fontes, imagens — preservando <b>animações</b> e <b>SPAs</b>.
+      </p>
 
-            // Update UI
-            setLoading(true);
-            clearLogs();
-            hideSuccess();
+      <div class="form-label"><span class="accent">&rsaquo;</span><span>URL alvo</span></div>
 
-            // Start download
-            fetch('/start-download', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: url })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    addLog('❌ ' + data.error);
-                    setLoading(false);
-                    return;
-                }
-                
-                currentSessionId = data.session_id;
-                connectSSE(currentSessionId);
-            })
-            .catch(error => {
-                addLog('❌ Erro de conexão: ' + error.message);
-                setLoading(false);
-            });
+      <form class="form-row" id="grab-form">
+        <div class="input-wrap">
+          <input type="url" id="url" placeholder="https://exemplo.com" autocomplete="off" spellcheck="false" aria-label="URL do site a capturar" required>
+        </div>
+        <button type="submit" id="grab" class="grab-btn">
+          <span id="btn-label">Baixar Site</span>
+          <div class="spinner" id="spin" aria-hidden="true"></div>
+          <span class="arrow" id="btn-arrow">&rarr;</span>
+        </button>
+      </form>
+
+      <div class="log-shell" id="log-shell" aria-live="polite">
+        <div class="log-head">
+          <div class="left"><div class="scan"></div><span>stream // extractor.py</span></div>
+          <div class="right"><div class="dot"></div><span>ao vivo</span></div>
+        </div>
+        <div class="log-body" id="logs" role="log"></div>
+      </div>
+
+      <div class="success-shell" id="ok">
+        <div class="success-icon">&#10003;</div>
+        <div class="success-text">
+          <div class="title">Captura concluída</div>
+          <div class="meta">Seu ZIP está pronto para download.</div>
+        </div>
+        <a class="success-link" id="dl-link" href="#" download>&darr; Baixar ZIP</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const form = document.getElementById('grab-form');
+  const urlInput = document.getElementById('url');
+  const btn = document.getElementById('grab');
+  const btnLabel = document.getElementById('btn-label');
+  const btnArrow = document.getElementById('btn-arrow');
+  const headStatus = document.getElementById('head-status');
+  const logShell = document.getElementById('log-shell');
+  const logs = document.getElementById('logs');
+  const ok = document.getElementById('ok');
+  const dlLink = document.getElementById('dl-link');
+  let es = null;
+
+  function addLog(text, isErr) {
+    const line = document.createElement('div');
+    line.className = 'log-line' + (isErr ? ' err' : '');
+    line.textContent = text;
+    logs.appendChild(line);
+    logs.scrollTop = logs.scrollHeight;
+  }
+  function clearLogs() { logs.innerHTML = ''; }
+  function setLoading(loading) {
+    btn.disabled = loading;
+    btn.classList.toggle('loading', loading);
+    urlInput.disabled = loading;
+    btnLabel.textContent = loading ? 'Processando…' : 'Baixar Site';
+    btnArrow.style.display = loading ? 'none' : 'inline-block';
+    headStatus.textContent = loading ? 'capturando' : 'pronto';
+    if (loading) logShell.classList.add('open');
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const url = urlInput.value.trim();
+    if (!url) return;
+
+    setLoading(true);
+    clearLogs();
+    ok.classList.remove('open');
+    addLog('> iniciando captura de ' + url);
+
+    fetch('/start-download', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url })
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          addLog('✗ ' + data.error, true);
+          setLoading(false);
+          headStatus.textContent = 'erro';
+          return;
         }
+        connectSSE(data.session_id);
+      })
+      .catch((err) => {
+        addLog('✗ erro de conexão: ' + err.message, true);
+        setLoading(false);
+        headStatus.textContent = 'erro';
+      });
+  });
 
-        function connectSSE(sessionId) {
-            eventSource = new EventSource('/stream/' + sessionId);
+  function connectSSE(sessionId) {
+    es = new EventSource('/stream/' + sessionId);
+    es.onmessage = function (event) { addLog(event.data); };
+    es.addEventListener('done', function (event) {
+      es.close();
+      if (event.data === 'complete') {
+        triggerDownload(sessionId);
+        showSuccess(sessionId);
+        headStatus.textContent = 'concluído';
+      } else {
+        addLog('✗ captura falhou', true);
+        headStatus.textContent = 'erro';
+      }
+      setTimeout(() => setLoading(false), 400);
+    });
+    es.onerror = function () {
+      es.close();
+      setLoading(false);
+      headStatus.textContent = 'erro';
+    };
+  }
 
-            eventSource.onmessage = function(event) {
-                addLog(event.data);
-            };
-
-            eventSource.addEventListener('done', function(event) {
-                eventSource.close();
-                
-                if (event.data === 'complete') {
-                    // Trigger download
-                    triggerDownload(sessionId);
-                    showSuccess(sessionId);
-                } else {
-                    addLog('❌ Download falhou');
-                }
-                
-                // Reset UI after a short delay
-                setTimeout(resetUI, 2000);
-            });
-
-            eventSource.onerror = function() {
-                eventSource.close();
-                setLoading(false);
-            };
-        }
-
-        function triggerDownload(sessionId) {
-            const link = document.createElement('a');
-            link.href = '/download-file/' + sessionId;
-            link.click();
-            
-            // Update manual download link
-            document.getElementById('downloadLink').href = '/download-file/' + sessionId;
-        }
-
-        function showSuccess(sessionId) {
-            document.getElementById('successMessage').classList.add('active');
-            document.getElementById('downloadLink').href = '/download-file/' + sessionId;
-        }
-
-        function hideSuccess() {
-            document.getElementById('successMessage').classList.remove('active');
-        }
-
-        function setLoading(loading) {
-            const btn = document.getElementById('downloadBtn');
-            const btnText = document.getElementById('btnText');
-            const spinner = document.getElementById('spinner');
-            const input = document.getElementById('urlInput');
-            const logContainer = document.getElementById('logContainer');
-
-            btn.disabled = loading;
-            input.disabled = loading;
-            spinner.style.display = loading ? 'block' : 'none';
-            btnText.textContent = loading ? 'Processando...' : 'Baixar Réplica';
-            
-            if (loading) {
-                logContainer.classList.add('active');
-            }
-        }
-
-        function resetUI() {
-            setLoading(false);
-            document.getElementById('urlInput').value = '';
-            
-            // Hide logs after delay
-            setTimeout(() => {
-                document.getElementById('logContainer').classList.remove('active');
-                hideSuccess();
-                clearLogs();
-            }, 5000);
-        }
-
-        function addLog(message) {
-            const container = document.getElementById('logContainer');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.textContent = message;
-            container.appendChild(entry);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function clearLogs() {
-            document.getElementById('logContainer').innerHTML = '';
-        }
-
-        // Handle Enter key
-        document.getElementById('urlInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !document.getElementById('downloadBtn').disabled) {
-                startDownload();
-            }
-        });
-    </script>
+  function triggerDownload(sessionId) {
+    const link = document.createElement('a');
+    link.href = '/download-file/' + sessionId;
+    link.click();
+  }
+  function showSuccess(sessionId) {
+    dlLink.href = '/download-file/' + sessionId;
+    ok.classList.add('open');
+  }
+</script>
 </body>
 </html>
