@@ -221,9 +221,25 @@
     padding: 12px 14px; max-height: 220px; overflow-y: auto;
     font-family: "JetBrains Mono", monospace; font-size: 11.5px; line-height: 1.7;
   }
-  .cursor-line { color: rgba(255,255,255,0.85); flex-shrink: 0; font-size: 10px; }
-  .log-line { color: #a8a8a8; }
-  .log-line.err { color: var(--error); }
+  .log-line { display: flex; gap: 10px; color: #b8b8b8; animation: logIn .35s cubic-bezier(.16,1,.3,1); }
+  .log-line .ts { color: #555; flex-shrink: 0; font-size: 10px; user-select: none; }
+  .log-line .ic { color: var(--mint); flex-shrink: 0; width: 14px; }
+  .log-line .msg { flex: 1; word-break: break-word; }
+  .log-line.ok .msg { color: var(--mint); font-weight: 500; }
+  .log-line.err .msg { color: var(--error); }
+  .log-line.err .ic { color: var(--error); }
+  .log-line.warn .msg { color: #ffd166; }
+  .log-line.warn .ic { color: #ffd166; }
+  .log-line.dim .msg { color: #777; }
+  @keyframes logIn { 0% { opacity: 0; transform: translateY(-4px); } 100% { opacity: 1; transform: translateY(0); } }
+  .cursor-line { display: flex; gap: 10px; color: var(--mint); }
+  .cursor-line .ts { color: #555; flex-shrink: 0; font-size: 10px; }
+  .cursor-line .blink {
+    display: inline-block; width: 7px; height: 12px; background: var(--mint);
+    box-shadow: 0 0 6px var(--mint); margin-left: 2px; vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
 
   .success-shell {
     margin-top: 14px; border: 1px solid rgba(30,143,255,0.4);
@@ -339,19 +355,53 @@
   const dlLink = document.getElementById('dl-link');
   let es = null;
 
-  function addLog(text, isErr) {
+  let cursorEl = null;
+
+  function nowTS() {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  }
+
+  function classifyLine(text) {
+    const t = text.trim();
+    if (/^(❌|⛔|🚫|✗)/.test(t) || /^erro/i.test(t) || /falhou/i.test(t)) return 'err';
+    if (/^(⚠️|⚠)/.test(t) || /aviso/i.test(t)) return 'warn';
+    if (/^(✅|✔|✓|🎉|🟢)/.test(t) || /pronto/i.test(t) || /conclu(í|i)d/i.test(t)) return 'ok';
+    return '';
+  }
+
+  function addLog(text, forcedClass) {
+    const cls = forcedClass === true ? 'err' : (forcedClass || classifyLine(text));
+    const icon = cls === 'err' ? '✗' : cls === 'warn' ? '!' : cls === 'ok' ? '✓' : '›';
     const line = document.createElement('div');
-    line.className = 'log-line' + (isErr ? ' err' : '');
-    line.textContent = text;
-    logs.appendChild(line);
+    line.className = 'log-line ' + cls;
+    line.innerHTML = `<span class="ts">${nowTS()}</span><span class="ic">${icon}</span><span class="msg"></span>`;
+    line.querySelector('.msg').textContent = text;
+    if (cursorEl && cursorEl.parentNode === logs) {
+      logs.insertBefore(line, cursorEl);
+    } else {
+      logs.appendChild(line);
+    }
     logs.scrollTop = logs.scrollHeight;
   }
-  function clearLogs() { logs.innerHTML = ''; }
+  function addCursor() {
+    cursorEl = document.createElement('div');
+    cursorEl.className = 'cursor-line';
+    cursorEl.innerHTML = `<span class="ts">${nowTS()}</span><span class="blink"></span>`;
+    logs.appendChild(cursorEl);
+    logs.scrollTop = logs.scrollHeight;
+  }
+  function removeCursor() {
+    if (cursorEl && cursorEl.parentNode) cursorEl.parentNode.removeChild(cursorEl);
+    cursorEl = null;
+  }
+  function clearLogs() { logs.innerHTML = ''; cursorEl = null; }
   function setLoading(loading) {
     btn.disabled = loading;
     btn.classList.toggle('loading', loading);
     urlInput.disabled = loading;
-    btnLabel.textContent = loading ? 'Processando…' : 'Baixar Site';
+    btnLabel.textContent = loading ? 'Capturando' : 'Baixar Site';
     btnArrow.style.display = loading ? 'none' : 'inline-block';
     headStatus.textContent = loading ? 'capturando' : 'pronto';
     if (loading) logShell.classList.add('open');
@@ -365,7 +415,8 @@
     setLoading(true);
     clearLogs();
     ok.classList.remove('open');
-    addLog('> iniciando captura de ' + url);
+    addLog('🚀 Iniciando captura de ' + url);
+    addCursor();
 
     fetch('/start-download', {
       method: 'POST',
@@ -375,7 +426,8 @@
       .then((r) => r.json())
       .then((data) => {
         if (data.error) {
-          addLog('✗ ' + data.error, true);
+          removeCursor();
+          addLog('✗ ' + data.error, 'err');
           setLoading(false);
           headStatus.textContent = 'erro';
           return;
@@ -383,7 +435,8 @@
         connectSSE(data.session_id);
       })
       .catch((err) => {
-        addLog('✗ erro de conexão: ' + err.message, true);
+        removeCursor();
+        addLog('✗ erro de conexão: ' + err.message, 'err');
         setLoading(false);
         headStatus.textContent = 'erro';
       });
@@ -394,18 +447,20 @@
     es.onmessage = function (event) { addLog(event.data); };
     es.addEventListener('done', function (event) {
       es.close();
+      removeCursor();
       if (event.data === 'complete') {
         triggerDownload(sessionId);
         showSuccess(sessionId);
         headStatus.textContent = 'concluído';
       } else {
-        addLog('✗ captura falhou', true);
+        addLog('✗ captura falhou', 'err');
         headStatus.textContent = 'erro';
       }
       setTimeout(() => setLoading(false), 400);
     });
     es.onerror = function () {
       es.close();
+      removeCursor();
       setLoading(false);
       headStatus.textContent = 'erro';
     };
