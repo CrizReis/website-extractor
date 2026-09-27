@@ -183,6 +183,8 @@ def start_download():
     """Start download process and return session ID for SSE."""
     data = request.get_json(silent=True) or {}
     url = data.get('url')
+    fast = bool(data.get('fast'))
+    output = data.get('output') if data.get('output') in ('html', 'server') else 'html'
 
     if not url:
         return jsonify({'error': 'URL is required'}), 400
@@ -199,14 +201,14 @@ def start_download():
             'started_at': now,
         }
 
-    thread = threading.Thread(target=process_download, args=(session_id, url))
+    thread = threading.Thread(target=process_download, args=(session_id, url, fast, output))
     thread.daemon = True
     thread.start()
 
     return jsonify({'session_id': session_id})
 
 
-def process_download(session_id, url):
+def process_download(session_id, url, fast=False, output='html'):
     """Background download worker."""
     with session_lock:
         q = message_queues.get(session_id)
@@ -221,7 +223,7 @@ def process_download(session_id, url):
 
     downloader = None
     try:
-        downloader = WebsiteDownloader(url, download_dir, log_callback=log_callback)
+        downloader = WebsiteDownloader(url, download_dir, log_callback=log_callback, fast=fast)
         success = downloader.process()
 
         if not success:
@@ -236,6 +238,10 @@ def process_download(session_id, url):
 
         site_name = get_site_name(url)
         zip_filename = f"{site_name}.zip"
+
+        if output == 'server':
+            with open(os.path.join(download_dir, 'LEIA-ME.txt'), 'w', encoding='utf-8') as guide:
+                guide.write('Para abrir esta cópia com servidor local, extraia o ZIP, abra um terminal nesta pasta e rode:\n\npython -m http.server\n\nDepois acesse http://localhost:8000\n')
 
         q.put("📦 Criando arquivo ZIP...")
         zip_directory(download_dir, zip_path)

@@ -14,7 +14,7 @@ import mimetypes
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class WebsiteDownloader:
-    def __init__(self, url, output_dir, log_callback=None):
+    def __init__(self, url, output_dir, log_callback=None, fast=False):
         self.url = url
         self.output_dir = output_dir
         self.assets_dir = os.path.join(output_dir, 'assets')
@@ -23,6 +23,7 @@ class WebsiteDownloader:
         self.base_url = url
         self.session = None  # Will be set with cookies from browser
         self.log_callback = log_callback or (lambda msg: print(msg))
+        self.fast = fast
         
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
@@ -715,7 +716,7 @@ class WebsiteDownloader:
             try:
                 self._navigate_with_retries(page)
                 # Wait a bit more for additional resources
-                page.wait_for_timeout(3000)
+                page.wait_for_timeout(1000 if self.fast else 3000)
                 self.log("✓ Recursos adicionais carregados")
 
                 # Retry once if we landed on an anti-bot challenge page
@@ -734,15 +735,17 @@ class WebsiteDownloader:
             self.base_url = page.url
             
             # Wait for dynamic content
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(1000 if self.fast else 2000)
             
             # Check for iframe content (site builders like Aura, Webflow, etc.)
             iframe_content, is_iframe = self._extract_iframe_content(page)
             
-            if not is_iframe:
+            if not is_iframe and not self.fast:
                 self.log("📜 Rolando página para carregar conteúdo lazy...")
                 self._scroll_page(page)
                 page.wait_for_timeout(3000)
+            elif self.fast:
+                self.log("⚡ Modo rápido: pulando exploração da página")
             
             # Get cookies from browser for fallback downloads
             cookies = context.cookies()

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Akaia Extractor — Captura offline de qualquer site</title>
+<title>Akaia Future Extractor 3.0 — Captura offline de qualquer site</title>
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,7 +27,7 @@
   html, body { background: var(--void); color: #e0e0e0; height: 100%; }
   body {
     font-family: Inter, sans-serif;
-    overflow: hidden;
+    overflow-x: hidden;
     background-color: var(--void);
     background-image:
       linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
@@ -72,18 +72,15 @@
 
   .stage {
     position: relative; z-index: 10; min-height: 100dvh;
-    display: flex; align-items: center; justify-content: center; padding: 32px 20px;
+    display: flex; align-items: center; justify-content: center; padding: 64px 20px 56px;
   }
 
   .card {
     position: relative; width: 100%; max-width: 540px;
-    background: linear-gradient(rgba(10,10,10,0.92), rgba(3,3,3,0.96));
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(30,143,255,0.08), transparent 42%), linear-gradient(165deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)), rgba(8,8,18,0.88);
     border: 1px solid rgba(255,255,255,0.08);
-    box-shadow:
-      rgba(30,143,255,0.06) 0px 0px 0px 1px,
-      rgba(0,0,0,0.65) 0px 28px 90px 0px,
-      rgba(30,143,255,0.12) 0px 0px 60px 0px,
-      rgba(255,255,255,0.04) 0px 1px 0px 0px inset;
+    box-shadow: inset 0 1px rgba(255,255,255,0.09), inset 0 0 48px -24px rgba(30,143,255,0.18), 0 26px 60px -32px rgba(0,0,0,0.92);
     opacity: 0; transform: translateY(18px);
     animation: cardIn 0.9s cubic-bezier(.16,1,.3,1) 0.15s 1 forwards;
   }
@@ -95,7 +92,7 @@
       rgba(30,143,255,0.2) 0px 0px 80px,
       rgba(255,255,255,0.05) 0px 1px 0px inset;
   }
-  .card .br { position: absolute; width: 12px; height: 12px; pointer-events: none; transition: width .3s, height .3s; }
+  .card .br { display: none; }
   .card .br-tl { top: -1px; left: -1px; border-top: 1.5px solid var(--mint); border-left: 1.5px solid var(--mint); }
   .card .br-tr { top: -1px; right: -1px; border-top: 1.5px solid var(--mint); border-right: 1.5px solid var(--mint); }
   .card .br-bl { bottom: -1px; left: -1px; border-bottom: 1.5px solid var(--mint); border-left: 1.5px solid var(--mint); }
@@ -142,8 +139,8 @@
   .form-label .accent { color: var(--mint); }
   .form-row { display: flex; flex-direction: column; gap: 10px; }
   .input-wrap {
-    position: relative; border: 1px solid var(--border-strong);
-    background: var(--void); transition: border-color .2s, box-shadow .25s;
+    position: relative; border: 1px solid var(--border-strong); border-radius: 11px;
+    background: rgba(255,255,255,0.04); transition: border-color .2s, box-shadow .25s;
   }
   .input-wrap:focus-within {
     border-color: var(--mint);
@@ -158,13 +155,26 @@
     width: 100%; padding: 15px 16px 15px 36px; background: transparent; border: 0; color: var(--white);
     font-family: "JetBrains Mono", monospace; font-size: 13px; letter-spacing: 0.01em; outline: none;
   }
-  .input-wrap input::placeholder { color: #444; }
+  .input-wrap input::placeholder { color: #666; }
   .input-wrap input:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  .format-choice { display: flex; flex-direction: column; gap: 6px; border: 0; margin: 2px 0 0; padding: 0; }
+  .format-choice legend { padding: 0 2px 4px; font-family: "JetBrains Mono", monospace; font-size: 9.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--sub); }
+  .fast-toggle { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; font-size: 12.5px; line-height: 1.5; color: #a8a8a8; padding: 2px; }
+  .fast-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+  .fast-toggle .box { flex: none; width: 15px; height: 15px; margin-top: 2px; border-radius: 4px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.03); display: grid; place-items: center; transition: .2s; }
+  .fast-toggle .box::after { content: ''; width: 7px; height: 7px; border-radius: 2px; background: var(--mint); transform: scale(0); transition: transform .15s; }
+  .fast-toggle input:checked + .box { border-color: var(--mint); background: var(--mint-soft); box-shadow: 0 0 10px rgba(30,143,255,.3); }
+  .fast-toggle input:checked + .box::after { transform: scale(1); }
+  .fast-toggle input:focus-visible + .box { outline: 2px solid var(--mint); outline-offset: 2px; }
+  .fast-toggle input:disabled ~ * { opacity: .5; }
+  .fast-toggle b { color: var(--white); font-weight: 600; }
+  .format-choice .box, .format-choice .box::after { border-radius: 50%; }
+
   .grab-btn {
-    position: relative; width: 100%; background: var(--mint); color: var(--void);
-    padding: 14px 24px; border: 0; font-family: Inter, sans-serif; font-size: 12px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer;
+    position: relative; width: 100%; background: linear-gradient(135deg, #5caeff 0%, var(--mint) 55%, var(--mint-dark) 100%); color: var(--void);
+    padding: 14px 24px; border: 0; border-radius: 999px; font-family: Inter, sans-serif; font-size: 15px; font-weight: 700;
+    letter-spacing: 0; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 10px;
     transition: background .2s, transform .1s, box-shadow .3s;
     box-shadow: rgba(30,143,255,0.4) 0px 0px 22px; overflow: hidden;
@@ -175,7 +185,7 @@
     transition: left .6s;
   }
   .grab-btn:hover:not(:disabled)::before { left: 100%; }
-  .grab-btn:hover:not(:disabled) { background: var(--white); box-shadow: rgba(255,255,255,0.45) 0px 0px 30px; }
+  .grab-btn:hover:not(:disabled) { transform: translateY(-2px); background: linear-gradient(135deg, #8ac6ff, #49a0ff 55%, #1678dc); box-shadow: rgba(30,143,255,.5) 0 8px 32px; }
   .grab-btn:active:not(:disabled) { transform: translateY(1px); }
   .grab-btn:disabled { background: rgba(30,143,255,0.18); color: rgba(30,143,255,0.7); cursor: not-allowed; box-shadow: none; }
   .grab-btn .arrow { transition: transform .2s; font-family: "JetBrains Mono", monospace; font-weight: 600; }
@@ -302,21 +312,25 @@
     <div class="card-body">
       <div class="brand">
         <span class="mark">A</span>
-        <span class="name">Akaia Extractor <span class="accent">2.0</span></span>
+        <span class="name">Akaia Future Extractor <span class="accent">3.0</span></span>
       </div>
 
       <p class="desc">
-        Capture qualquer site em um <b>ZIP offline</b> completo. HTML, CSS, JS, fontes, imagens — preservando <b>animações</b> e <b>SPAs</b>.
+        Cole o endereço de um site e baixe uma cópia que abre no seu computador, sem internet, com animações, vídeos e 3D funcionando como no original.
       </p>
-
-      <div class="form-label"><span class="accent">&rsaquo;</span><span>URL alvo</span></div>
 
       <form class="form-row" id="grab-form">
         <div class="input-wrap">
-          <input type="url" id="url" placeholder="https://exemplo.com" autocomplete="off" spellcheck="false" aria-label="URL do site a capturar" required>
+          <input type="url" id="url" placeholder="Cole a URL do site (ex.: exemplo.com)" autocomplete="off" spellcheck="false" aria-label="URL do site a capturar" required>
         </div>
+        <fieldset class="format-choice">
+          <legend>Formato</legend>
+          <label class="fast-toggle"><input type="radio" name="output" value="html" checked><span class="box" aria-hidden="true"></span><span><b>Duplo clique (index.html)</b> — abre direto no navegador, sem terminal (com a pasta assets/ ao lado). Quebra em mais sites.</span></label>
+          <label class="fast-toggle"><input type="radio" name="output" value="server"><span class="box" aria-hidden="true"></span><span><b>Servidor local</b> — a cópia viva mais fiel. Abre com um comando no terminal, explicado no ZIP.</span></label>
+        </fieldset>
+        <label class="fast-toggle"><input type="checkbox" id="fast" checked><span class="box" aria-hidden="true"></span><span><b>Modo rápido</b> — só desktop, sem explorar menus. Cerca de metade do tempo, cópia menos completa.</span></label>
         <button type="submit" id="grab" class="grab-btn">
-          <span id="btn-label">Baixar Site</span>
+          <span id="btn-label">Baixar site</span>
           <div class="spinner" id="spin" aria-hidden="true"></div>
           <span class="arrow" id="btn-arrow">&rarr;</span>
         </button>
@@ -334,7 +348,7 @@
         <div class="success-icon">&#10003;</div>
         <div class="success-text">
           <div class="title">Captura concluída</div>
-          <div class="meta">Seu ZIP está pronto para download.</div>
+          <div class="meta" id="ok-meta">Seu ZIP está pronto para download.</div>
         </div>
         <a class="success-link" id="dl-link" href="#" download>&darr; Baixar ZIP</a>
       </div>
@@ -353,6 +367,8 @@
   const logs = document.getElementById('logs');
   const ok = document.getElementById('ok');
   const dlLink = document.getElementById('dl-link');
+  const fastInput = document.getElementById('fast');
+  const outputInputs = document.querySelectorAll('input[name="output"]');
   let es = null;
 
   let cursorEl = null;
@@ -401,7 +417,9 @@
     btn.disabled = loading;
     btn.classList.toggle('loading', loading);
     urlInput.disabled = loading;
-    btnLabel.textContent = loading ? 'Capturando' : 'Baixar Site';
+    fastInput.disabled = loading;
+    outputInputs.forEach((input) => { input.disabled = loading; });
+    btnLabel.textContent = loading ? 'Capturando' : 'Baixar site';
     btnArrow.style.display = loading ? 'none' : 'inline-block';
     headStatus.textContent = loading ? 'capturando' : 'pronto';
     if (loading) logShell.classList.add('open');
@@ -409,8 +427,9 @@
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    const url = urlInput.value.trim();
+    let url = urlInput.value.trim();
     if (!url) return;
+    if (!/^https?:\/\//i.test(url)) { url = 'https://' + url; urlInput.value = url; }
 
     setLoading(true);
     clearLogs();
@@ -421,7 +440,7 @@
     fetch('/start-download', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url })
+      body: JSON.stringify({ url: url, fast: fastInput.checked, output: document.querySelector('input[name="output"]:checked').value })
     })
       .then((r) => r.json())
       .then((data) => {
@@ -473,6 +492,9 @@
   }
   function showSuccess(sessionId) {
     dlLink.href = '/download-file/' + sessionId;
+    document.getElementById('ok-meta').textContent = document.querySelector('input[name="output"]:checked').value === 'server'
+      ? 'Seu ZIP inclui as instruções para abrir a cópia em servidor local.'
+      : 'Seu ZIP está pronto: extraia e dê duplo clique no index.html.';
     ok.classList.add('open');
   }
 </script>
